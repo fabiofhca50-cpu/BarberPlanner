@@ -50,6 +50,7 @@ h2{
 const SUPABASE_URL="https://yulctvnfowuemqrevpxz.supabase.co";
 const SUPABASE_ANON_KEY="sb_publishable_bHS55deSX-N3PZl1p59SCA_dt_Cs44G";
 const db=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+ 
 let shop, pros=[], servs=[], professional=null, service=null, slot=null, selectedDate=null;
 
 const show=id=>{document.querySelectorAll("section").forEach(x=>x.classList.add("hidden"));document.getElementById(id).classList.remove("hidden")};
