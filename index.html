@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BarberPlanner</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{font-family:Arial;margin:0;background:#f5f5f5;color:#171717}.app{max-width:520px;margin:auto;background:#fff;min-height:100vh;padding:24px}h1{margin:0}.muted{color:#777}.card{border:1px solid #ddd;border-radius:14px;padding:16px;margin:10px 0;cursor:pointer}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.slot{padding:12px;text-align:center;background:#eee;border-radius:10px;cursor:pointer}button{width:100%;padding:14px;border:0;border-radius:10px;background:#111;color:#fff;font-weight:bold}input{width:100%;padding:13px;margin:8px 0;border:1px solid #ccc;border-radius:9px;box-sizing:border-box}.hidden{display:none}.error{color:#b00020;margin:10px 0}
+</style>
+</head>
+<body><div class="app">
+<h1>BarberPlanner</h1><p class="muted">Agendamento simples para sua barbearia.</p>
+
+<section id="p1"><h2>Profissional</h2><div id="pros"></div></section>
+<section id="p2" class="hidden"><h2>Serviço</h2><div id="servs"></div></section>
+<section id="pdate" class="hidden"><h2>Data</h2><input id="date" type="date"><div id="dateHelp" class="muted"></div><button onclick="loadSlots()">Ver horários</button></section>
+<section id="p3" class="hidden"><h2>Horário</h2><div id="slots" class="grid"></div></section>
+<section id="p4" class="hidden"><h2>Seus dados</h2><input id="name" placeholder="Nome"><input id="phone" placeholder="Celular"><div id="summary"></div><div id="err" class="error"></div><button onclick="book()">Confirmar agendamento</button></section>
+<section id="done" class="hidden"><h2>Agendamento confirmado ✓</h2><div id="confirmation"></div></section>
+</div>
+<script>
+const SUPABASE_URL="COLE_AQUI_A_URL_DO_SUPABASE";
+const SUPABASE_ANON_KEY="COLE_AQUI_A_CHAVE_ANON_DO_SUPABASE";
+const db=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+let shop, pros=[], servs=[], professional=null, service=null, slot=null, selectedDate=null;
+
+const show=id=>{document.querySelectorAll("section").forEach(x=>x.classList.add("hidden"));document.getElementById(id).classList.remove("hidden")};
+const esc=x=>String(x??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+
+async function init(){
+ const a=await db.from("barbershops").select("*").limit(1);
+ if(a.error){err(a.error.message);return} shop=a.data[0];
+ const p=await db.from("professionals").select("*").eq("barbershop_id",shop.id).eq("active",true).order("name");
+ const s=await db.from("services").select("*").eq("barbershop_id",shop.id).eq("active",true).order("name");
+ if(p.error||s.error){err((p.error||s.error).message);return}
+ pros=p.data;servs=s.data;
+ document.getElementById("pros").innerHTML='<div class="card" onclick="choosePro(null)"><b>Sem preferência</b><div class="muted">O sistema encontra um profissional disponível.</div></div>'+pros.map(x=>`<div class="card" onclick="choosePro('${x.id}')"><b>${esc(x.name)}</b></div>`).join("");
+}
+function choosePro(id){professional=id;document.getElementById("servs").innerHTML=servs.map(x=>`<div class="card" onclick="chooseService('${x.id}')"><b>${esc(x.name)}</b><div class="muted">${x.duration_min} min · R$ ${(x.price_cents/100).toFixed(2).replace(".",",")}</div></div>`).join("");show("p2")}
+function chooseService(id){
+ service=servs.find(x=>x.id===id);
+ const input=document.getElementById("date");
+ const today=new Date();
+ const localToday=new Date(today.getTime()-today.getTimezoneOffset()*60000).toISOString().slice(0,10);
+ input.min=localToday;
+ input.value=localToday;
+ selectedDate=localToday;
+ document.getElementById("dateHelp").textContent=`Escolha a data para ${service.name}.`;
+ show("pdate");
+}
+async function loadSlots(){
+ selectedDate=document.getElementById("date").value;
+ if(!selectedDate){err("Escolha uma data.");return}
+ const r=await db.rpc("get_availability",{p_date:selectedDate,p_service_id:service.id,p_professional_id:professional});
+ if(r.error){err(r.error.message);return}
+ if(!r.data.length){
+   document.getElementById("slots").innerHTML='<p class="muted">Nenhum horário disponível nesta data.</p>';
+ }else{
+   document.getElementById("slots").innerHTML=r.data.map(x=>`<div class="slot" onclick='chooseSlot(${JSON.stringify(x)})'>${x.slot_time}</div>`).join("");
+ }
+ show("p3");
+}
+function chooseSlot(x){slot=x;document.getElementById("summary").innerHTML=`<p><b>${esc(service.name)}</b><br>${esc(x.professional_name)}<br>${x.slot_time} às ${x.end_time}</p>`;show("p4")}
+async function book(){
+ const name=document.getElementById("name").value.trim(),phone=document.getElementById("phone").value.trim();
+ if(!name||!phone){err("Nome e celular são obrigatórios.");return}
+ const start=selectedDate+" "+slot.slot_time+":00";
+ const r=await db.rpc("create_appointment",{p_barbershop_id:shop.id,p_professional_id:professional,p_service_id:service.id,p_name:name,p_phone:phone,p_start_at:start});
+ if(r.error){err(r.error.message);return}
+ document.getElementById("confirmation").innerHTML=`${esc(service.name)}<br>${esc(r.data.professional_name)}<br>${slot.slot_time} às ${slot.end_time}`;
+ show("done");
+}
+function err(m){document.getElementById("err").textContent=m}
+init();
+</script>
+</body></html>
