@@ -960,7 +960,62 @@ function editAppointment(){
   }
 
   editArea.classList.remove("hidden");
+loadEditTimes();
+}
+  async function loadEditTimes(){
 
+  const serviceId =
+    document.getElementById("editService").value;
+
+  const professionalId =
+    document.getElementById("editProfessional").value;
+
+  const date =
+    document.getElementById("editDate").value;
+
+  const timeSelect =
+    document.getElementById("editTime");
+
+  if(!serviceId || !date){
+    timeSelect.innerHTML =
+      '<option value="">Selecione serviço e data</option>';
+    return;
+  }
+
+  timeSelect.innerHTML =
+    '<option value="">Carregando horários...</option>';
+
+  const result = await db.rpc(
+    "get_availability",
+    {
+      p_date: date,
+      p_service_id: serviceId,
+      p_professional_id: professionalId || null
+    }
+  );
+
+  if(result.error){
+
+    timeSelect.innerHTML =
+      '<option value="">Erro ao carregar horários</option>';
+
+    return;
+  }
+
+  if(!result.data.length){
+
+    timeSelect.innerHTML =
+      '<option value="">Nenhum horário disponível</option>';
+
+    return;
+  }
+
+  timeSelect.innerHTML =
+    result.data.map(x =>
+      `<option value="${x.slot_time}">
+        ${x.slot_time} às ${x.end_time}
+      </option>`
+    ).join("");
 }
 /* =========================
    LOGOUT
