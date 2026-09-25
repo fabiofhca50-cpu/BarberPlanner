@@ -918,14 +918,48 @@ function editAppointment(){
     return;
   }
 
+  const currentService =
+    document.getElementById("detailService").textContent.trim();
+
+  const currentProfessional =
+    document.getElementById("detailProfessional").textContent.trim();
+
+  const serviceSelect =
+    document.getElementById("editService");
+
+  const professionalSelect =
+    document.getElementById("editProfessional");
+
+  serviceSelect.innerHTML =
+    servs.map(s =>
+      `<option value="${s.id}">
+        ${esc(s.name)}
+      </option>`
+    ).join("");
+
+  professionalSelect.innerHTML =
+    `<option value="">Sem preferência</option>` +
+    pros.map(p =>
+      `<option value="${p.id}">
+        ${esc(p.name)}
+      </option>`
+    ).join("");
+
+  const serviceFound =
+    servs.find(s => s.name === currentService);
+
+  const professionalFound =
+    pros.find(p => p.name === currentProfessional);
+
+  if(serviceFound){
+    serviceSelect.value = serviceFound.id;
+  }
+
+  if(professionalFound){
+    professionalSelect.value = professionalFound.id;
+  }
+
   editArea.classList.remove("hidden");
-
-}
-  function closeAppointmentDetails(){
-
-  document
-    .getElementById("appointmentDetails")
-    .classList.add("hidden");
 
 }
 /* =========================
