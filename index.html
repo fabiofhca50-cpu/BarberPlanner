@@ -324,7 +324,20 @@ Visualização dos agendamentos.
 <div id="agendaError" class="error"></div>
 
 <div id="agendaList"></div>
+<div id="appointmentDetails" class="hidden">
+  <h2>Detalhes do agendamento</h2>
 
+  <p><strong>Cliente:</strong> <span id="detailClient"></span></p>
+  <p><strong>Telefone:</strong> <span id="detailPhone"></span></p>
+  <p><strong>Profissional:</strong> <span id="detailProfessional"></span></p>
+  <p><strong>Serviço:</strong> <span id="detailService"></span></p>
+  <p><strong>Valor:</strong> R$ <span id="detailPrice"></span></p>
+  <p><strong>Duração:</strong> <span id="detailDuration"></span> minutos</p>
+  <p><strong>Horário:</strong> <span id="detailStart"></span> às <span id="detailEnd"></span></p>
+  <p><strong>Status:</strong> <span id="detailStatus"></span></p>
+
+  <button type="button" onclick="closeAppointmentDetails()">Fechar</button>
+</div>
 </div>
 
 </div>
@@ -757,7 +770,7 @@ async function loadAgenda(){
 
     result.data.map(a=>
 
-      `<div class="agenda-item">
+     `<div class="agenda-item" onclick="showAppointmentDetails('${a.appointment_id}')">
 
         <div class="agenda-time">
           ${formatTime(a.start_at)}
@@ -803,7 +816,89 @@ function formatTime(value){
     );
 }
 
+async function showAppointmentDetails(appointmentId){
 
+  const box = document.getElementById("appointmentDetails");
+
+  box.classList.remove("hidden");
+
+  box.innerHTML = "<p>Carregando detalhes...</p>";
+
+  const result = await db.rpc(
+    "get_appointment_details",
+    {
+      p_appointment_id: appointmentId
+    }
+  );
+
+  if(result.error){
+
+    box.innerHTML = `
+      <p class="error">
+        Erro ao carregar detalhes: ${esc(result.error.message)}
+      </p>
+      <button type="button" onclick="closeAppointmentDetails()">Fechar</button>
+    `;
+
+    return;
+  }
+
+  const a = result.data?.[0];
+
+  if(!a){
+
+    box.innerHTML = `
+      <p>Nenhum detalhe encontrado.</p>
+      <button type="button" onclick="closeAppointmentDetails()">Fechar</button>
+    `;
+
+    return;
+  }
+
+  document.getElementById("detailClient").textContent =
+    a.client_name || "";
+
+  document.getElementById("detailPhone").textContent =
+    a.client_phone || "";
+
+  document.getElementById("detailProfessional").textContent =
+    a.professional_name || "";
+
+  document.getElementById("detailService").textContent =
+    a.service_name || "";
+
+  document.getElementById("detailPrice").textContent =
+    Number(a.service_price || 0).toFixed(2).replace(".", ",");
+
+  document.getElementById("detailDuration").textContent =
+    a.service_duration || "";
+
+  document.getElementById("detailStart").textContent =
+    formatTime(a.start_at);
+
+  document.getElementById("detailEnd").textContent =
+    formatTime(a.end_at);
+
+  document.getElementById("detailStatus").textContent =
+    a.status === "confirmed"
+      ? "Confirmado"
+      : a.status === "pending"
+      ? "Pendente"
+      : a.status === "cancelled"
+      ? "Cancelado"
+      : a.status || "";
+
+  box.classList.remove("hidden");
+}
+
+
+function closeAppointmentDetails(){
+
+  document
+    .getElementById("appointmentDetails")
+    .classList.add("hidden");
+
+}
 /* =========================
    LOGOUT
 ========================= */
