@@ -123,6 +123,34 @@ input{
 .agenda-time{
   font-size:20px;
   font-weight:bold;
+  margin-bottom:10px;
+}
+
+.status-badge{
+  display:inline-block;
+  padding:5px 10px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:bold;
+  text-transform:uppercase;
+  letter-spacing:.3px;
+  background:#e8f5e9;
+  color:#2e7d32;
+}
+
+.status-badge.confirmed{
+  background:#e8f5e9;
+  color:#2e7d32;
+}
+
+.status-badge.pending{
+  background:#fff3cd;
+  color:#856404;
+}
+
+.status-badge.cancelled{
+  background:#fdecea;
+  color:#c62828;
 }
 
 .admin-link{
@@ -749,9 +777,9 @@ async function loadAgenda(){
           </span>
         </p>
 
-        <div class="muted">
-          Status: ${esc(a.status)}
-        </div>
+        <div class="status-badge ${esc(a.status)}">
+  ${esc(a.status)}
+</div>
 
       </div>`
 
