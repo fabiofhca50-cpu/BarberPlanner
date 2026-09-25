@@ -778,7 +778,7 @@ async function loadAgenda(){
         </p>
 
         <div class="status-badge ${esc(a.status)}">
-  ${esc(a.status)}
+  ${a.status === "confirmed" ? "Confirmado" : a.status === "pending" ? "Pendente" : a.status === "cancelled" ? "Cancelado" : esc(a.status)}
 </div>
 
       </div>`
