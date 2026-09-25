@@ -364,7 +364,7 @@ let professional=null;
 let service=null;
 let slot=null;
 let selectedDate=null;
-
+let selectedAppointmentId=null;
 
 /* =========================
    FUNÇÕES GERAIS
@@ -819,7 +819,7 @@ function formatTime(value){
 }
 
 async function showAppointmentDetails(appointmentId){
-
+selectedAppointmentId = appointmentId;
   const box = document.getElementById("appointmentDetails");
 
   box.classList.remove("hidden");
