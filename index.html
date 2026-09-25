@@ -910,7 +910,16 @@ selectedAppointmentId = appointmentId;
 
 
 function editAppointment(){
-  alert("Editar agendamento");
+
+  const editArea = document.getElementById("editAppointmentArea");
+
+  if(!editArea){
+    alert("Área de edição não encontrada.");
+    return;
+  }
+
+  editArea.classList.remove("hidden");
+
 }
   function closeAppointmentDetails(){
 
