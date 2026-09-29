@@ -1111,6 +1111,42 @@ loadEditTimes();
   }
 
 }
+  async function cancelAppointment(){
+
+  if(!selectedAppointmentId){
+    alert("Nenhum agendamento selecionado.");
+    return;
+  }
+
+  const confirmar = confirm(
+    "Tem certeza que deseja cancelar este agendamento?"
+  );
+
+  if(!confirmar){
+    return;
+  }
+
+  const result = await db.rpc(
+    "cancel_appointment",
+    {
+      p_appointment_id: selectedAppointmentId
+    }
+  );
+
+  if(result.error){
+
+    alert(
+      "Erro ao cancelar agendamento: " +
+      result.error.message
+    );
+
+    return;
+  }
+
+  alert("Agendamento cancelado com sucesso.");
+
+  location.reload();
+}
 /* =========================
    LOGOUT
 ========================= */
