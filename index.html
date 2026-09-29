@@ -1017,6 +1017,79 @@ loadEditTimes();
       </option>`
     ).join("");
 }
+  async function saveAppointmentEdit(){
+
+  if(!selectedAppointmentId){
+    alert("Nenhum agendamento selecionado.");
+    return;
+  }
+
+  const serviceId =
+    document.getElementById("editService").value;
+
+  const professionalId =
+    document.getElementById("editProfessional").value;
+
+  const date =
+    document.getElementById("editDate").value;
+
+  const time =
+    document.getElementById("editTime").value;
+
+  if(!serviceId || !date || !time){
+    alert("Selecione serviço, data e horário.");
+    return;
+  }
+
+  const availability = await db.rpc(
+    "get_availability",
+    {
+      p_date: date,
+      p_service_id: serviceId,
+      p_professional_id: professionalId || null
+    }
+  );
+
+  if(availability.error){
+    alert("Erro ao verificar disponibilidade: " + availability.error.message);
+    return;
+  }
+
+  const selectedSlot =
+    availability.data.find(
+      x => x.slot_time === time
+    );
+
+  if(!selectedSlot){
+    alert("Esse horário não está mais disponível.");
+    return;
+  }
+
+  const finalProfessionalId =
+    professionalId || selectedSlot.professional_id;
+
+  const startAt =
+    `${date}T${time}:00`;
+
+  const result = await db.rpc(
+    "update_appointment",
+    {
+      p_appointment_id: selectedAppointmentId,
+      p_service_id: serviceId,
+      p_start_at: startAt,
+      p_professional_id: finalProfessionalId
+    }
+  );
+
+  if(result.error){
+    alert("Erro ao salvar alterações: " + result.error.message);
+    return;
+  }
+
+  alert("Agendamento alterado com sucesso.");
+
+  location.reload();
+}
 /* =========================
    LOGOUT
 ========================= */
