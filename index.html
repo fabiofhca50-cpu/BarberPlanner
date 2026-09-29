@@ -1090,6 +1090,16 @@ loadEditTimes();
 
   location.reload();
 }
+  function cancelAppointmentEdit(){
+
+  const editArea =
+    document.getElementById("editAppointmentArea");
+
+  if(editArea){
+    editArea.classList.add("hidden");
+  }
+
+}
 /* =========================
    LOGOUT
 ========================= */
