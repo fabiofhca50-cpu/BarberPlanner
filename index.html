@@ -801,9 +801,12 @@ async function sendClientCode(){
   const phone = "+" + digits;
 
   const result =
-    await db.auth.signInWithOtp({
-      phone: phone
-    });
+   await db.auth.signInWithOtp({
+  phone: phone,
+  options: {
+    channel: "whatsapp"
+  }
+});
 
   if(result.error){
 
