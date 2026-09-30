@@ -263,6 +263,72 @@ Confirmar agendamento
 
 
 <!-- =========================
+     LOGIN DO CLIENTE
+========================= -->
+
+<div id="clientLogin" class="hidden">
+
+  <h1>Área do cliente</h1>
+
+  <p class="muted">
+    Entre com seu celular para consultar seus agendamentos.
+  </p>
+
+  <label>Nome</label>
+  <input
+    id="clientName"
+    type="text"
+    placeholder="Seu nome"
+  >
+
+  <label>Celular</label>
+  <input
+    id="clientPhone"
+    type="tel"
+    placeholder="(11) 91234-5678"
+  >
+
+  <div id="clientLoginError" class="error"></div>
+
+  <button type="button" onclick="sendClientCode()">
+    Continuar
+  </button>
+
+  <button
+    type="button"
+    class="secondary"
+    onclick="show('p1')"
+  >
+    Voltar
+  </button>
+
+  <div id="clientCodeArea" class="hidden">
+
+    <h2>Digite o código</h2>
+
+    <p class="muted">
+      Enviamos um código para seu celular.
+    </p>
+
+    <input
+      id="clientCode"
+      type="text"
+      inputmode="numeric"
+      maxlength="6"
+      placeholder="Código de 6 dígitos"
+    >
+
+    <div id="clientCodeError" class="error"></div>
+
+    <button type="button" onclick="verifyClientCode()">
+      Confirmar código
+    </button>
+
+  </div>
+
+</div>
+  
+<!-- =========================
      LOGIN ADMINISTRATIVO
 ========================= -->
 
@@ -705,8 +771,128 @@ function backToPublic(){
     .classList.remove("hidden");
 }
 
+async function sendClientCode(){
 
-async function adminLogin(){
+  const name =
+    document.getElementById("clientName").value.trim();
+
+  const phoneInput =
+    document.getElementById("clientPhone").value.trim();
+
+  const error =
+    document.getElementById("clientLoginError");
+
+  error.textContent = "";
+
+  if(!name){
+    error.textContent = "Digite seu nome.";
+    return;
+  }
+
+  const digits =
+    phoneInput.replace(/\D/g, "");
+
+  if(!/^55\d{2}9\d{8}$/.test(digits)){
+    error.textContent =
+      "Digite um celular válido com DDD. Exemplo: (11) 91234-5678.";
+    return;
+  }
+
+  const phone = "+" + digits;
+
+  const result =
+    await db.auth.signInWithOtp({
+      phone: phone
+    });
+
+  if(result.error){
+
+    error.textContent =
+      "Não foi possível enviar o código: " +
+      result.error.message;
+
+    return;
+  }
+
+  document.getElementById("clientCodeArea")
+    .classList.remove("hidden");
+
+  document.getElementById("clientPhone")
+    .disabled = true;
+
+  document.getElementById("clientName")
+    .disabled = true;
+
+}
+
+
+async function verifyClientCode(){
+
+  const code =
+    document.getElementById("clientCode").value.trim();
+
+  const error =
+    document.getElementById("clientCodeError");
+
+  error.textContent = "";
+
+  if(!/^\d{6}$/.test(code)){
+    error.textContent =
+      "Digite o código de 6 dígitos.";
+    return;
+  }
+
+  const phoneInput =
+    document.getElementById("clientPhone").value.trim();
+
+  const digits =
+    phoneInput.replace(/\D/g, "");
+
+  const phone = "+" + digits;
+
+  const result =
+    await db.auth.verifyOtp({
+      phone: phone,
+      token: code,
+      type: "sms"
+    });
+
+  if(result.error){
+
+    error.textContent =
+      "Código inválido ou expirado.";
+
+    return;
+  }
+
+  const name =
+    document.getElementById("clientName").value.trim();
+
+  const linkResult =
+    await db.rpc(
+      "link_my_client",
+      {
+        p_name: name,
+        p_phone: digits
+      }
+    );
+
+  if(linkResult.error){
+
+    error.textContent =
+      "Não foi possível vincular seu cadastro: " +
+      linkResult.error.message;
+
+    return;
+  }
+
+  alert("Login realizado com sucesso.");
+
+  show("p2");
+}
+
+  
+  async function adminLogin(){
 
   const email=
     document.getElementById("adminEmail")
