@@ -614,16 +614,23 @@ async function book(){
     document.getElementById("name")
       .value.trim();
 
-  const phone=
-    document.getElementById("phone")
-      .value.trim();
-  const phoneDigits = phone.replace(/\D/g, "");
+let phone =
+  document.getElementById("phone")
+  .value.trim();
 
-if(!/^55\d{2}9\d{8}$/.test(phoneDigits)){
+let phoneDigits = phone.replace(/\D/g, "");
+
+if(phoneDigits.startsWith("55")){
+  phoneDigits = phoneDigits.substring(2);
+}
+
+if(!/^\d{2}9\d{8}$/.test(phoneDigits)){
   document.getElementById("err").textContent =
     "Digite um celular válido com DDD. Exemplo: (11) 91234-5678.";
   return;
 }
+
+phone = "55" + phoneDigits;
 
   if(!name||!phone){
 
